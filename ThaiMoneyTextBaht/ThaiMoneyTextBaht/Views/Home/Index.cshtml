@@ -2,7 +2,33 @@
     ViewData["Title"] = "Home Page";
 }
 
-<div class="text-center">
-    <h1 class="display-4">Welcome</h1>
-    <p>Learn about <a href="https://docs.microsoft.com/aspnet/core">building Web apps with ASP.NET Core</a>.</p>
+<div class="table-responsive-lg py-5">
+    <table class="table">
+        <thead>
+            <tr>
+                <th scope="col">#</th>
+                <th scope="col">Money</th>
+                <th scope="col">Text</th>
+            </tr>
+        </thead>
+        <tbody>
+            @{
+                if (ViewData["Money"] != null)
+                {
+                    int r = 0;
+                    foreach (var i in (IEnumerable<MoneyModel>)ViewData["Money"])
+                    {
+                        r += 1;
+                        <tr>
+                            <th scope="row">@r</th>
+                            <td class="text-right">
+                                @i.Money ฿
+                            </td>
+                            <td>@i.MoneyText</td>
+                        </tr>
+                    }
+                }
+            }
+        </tbody>
+    </table>
 </div>
