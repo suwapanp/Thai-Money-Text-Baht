@@ -27,7 +27,7 @@ namespace ThaiMoneyTextBaht.Controllers
             for (int i = 0; i < 10; i++)
             {
                 decimal _num = _random.Next(0, 999999999);
-                money.Add(new MoneyModel() { Money = _num.ToString("#,###,##0.00"), MoneyText = ChangeText(_num.ToString()) });
+                money.Add(new MoneyModel() { Money = _num.ToString("#,###,##0.00"), MoneyText = MoneyRead(_num.ToString()) });
             }
 
             ViewData["Money"] = money.ToList();
@@ -46,112 +46,104 @@ namespace ThaiMoneyTextBaht.Controllers
             return View(new ErrorViewModel { RequestId = Activity.Current?.Id ?? HttpContext.TraceIdentifier });
         }
 
-        string[] TextCount = { "ศูนย์", "หนึ่ง", "สอง", "สาม", "สี่", "ห้า", "หก", "เจ็ด", "แปด", "เก้า", "สิบ" };
-        string[] TextPost = { "", "สิบ", "ร้อย", "พัน", "หมื่น", "แสน", "ล้าน" };
-        string ChangeText(string _money, bool IsMillion = false)
+        public string MoneyRead(string _money, bool IsTrillion = false)
         {
-            string _baht = "";
-            string _million = "";
+            string MoneyText = "";
+            string Trillion = "";
 
-            decimal money = 0;
-            decimal.TryParse(_money, out money);
+            string[] _text = { "ศูนย์", "หนึ่ง", "สอง", "สาม", "สี่", "ห้า", "หก", "เจ็ด", "แปด", "เก้า", "สิบ" };
+            string[] _read = { "", "สิบ", "ร้อย", "พัน", "หมื่น", "แสน", "ล้าน" };
 
-            if (money == 0)
+            decimal _number = 0;
+            decimal.TryParse(_money, out _number);
+
+            if (_number == 0)
             {
                 return "ศูนย์บาทถ้วน";
             }
 
-            string[] _number
-                = money.ToString("0.00").Split('.');
+            _money = _number.ToString("0.00");
+            string _integer = _money.Split('.')[0];
+            string _satang = _money.Split('.')[1];
 
-            string _int = _number[0];
-            string _satang = _number[1];
+            if (_integer.Length > 13)
+                throw new Exception("รองรับตัวเลขได้เพียง ล้านล้าน เท่านั้น!");
 
-            if (_int.Length > 13)
+            bool _IsTrillion = _integer.Length > 7;
+            if (_IsTrillion)
             {
-                return "ลองรับตัวเลข 13 หลัก หรือ ล้านล้านบาท เท่านั้น";
+                Trillion = _integer.Substring(0, _integer.Length - 6);
+                MoneyText = MoneyRead(Trillion, _IsTrillion);
+
+                _integer = _integer.Substring(Trillion.Length);
             }
 
-            bool _IsMillion = _int.Length > 7;
-
-            if (_IsMillion)
+            int _length = _integer.Length;
+            for (int i = 0; i < _integer.Length; i++)
             {
-                _million = _int.Substring(0, _int.Length - 6);
-                _baht = ChangeText(_million, true);
-                _int = _int.Substring(_million.Length);
-            }
-
-            int _length = _int.Length;
-
-            for (int i = 0; i < _length; i++)
-            {
-                string _subnumber = _int.Substring(i, 1);
-                if (_subnumber != "0")
+                string number = _integer.Substring(i, 1);
+                if (number != "0")
                 {
-                    if (i == _length - 1 && _subnumber == "1" && _length != 1)
+                    if (i == _length - 1 && number == "1" && _length != 1)
                     {
-                        _baht += "เอ็ด";
+                        MoneyText += "เอ็ด";
                     }
-                    else if (i == _length - 2 && _subnumber == "2" && _length != 2)
+                    else if (i == _length - 2 && number == "2" && _length != 1)
                     {
-                        _baht += "ยี่";
+                        MoneyText += "ยี่";
                     }
-                    else if (i != _length - 2 || _subnumber != "1")
+                    else if (i != _length - 2 || number != "1")
                     {
-                        _baht += TextPost[int.Parse(_subnumber)];
+                        MoneyText += _text[int.Parse(number)];
                     }
 
-                    _baht += TextPost[((_length - i) - 1)];
-
+                    MoneyText += _read[(_length - i) - 1];
                 }
-
             }
 
-            if (_IsMillion)
+            if (IsTrillion)
             {
-                return _baht += "ล้าน";
+                return MoneyText + "ล้าน";
             }
 
-            if (_int != "0")
+            if (_integer != "0")
             {
-                _baht += "บาท";
+                MoneyText += "บาท";
             }
 
             if (_satang == "00")
             {
-                _baht += "ถ้วน";
+                MoneyText += "ถ้วน";
             }
             else
             {
                 _length = _satang.Length;
-
-                for (int i = 0; i < _length; i++)
+                for (int i = 0; i < _satang.Length; i++)
                 {
-                    string _subnumber = _int.Substring(i, 1);
-                    if (_subnumber != "0")
+                    string number = _satang.Substring(i, 1);
+                    if (number != "0")
                     {
-                        if (i == _length - 1 && _subnumber == "1" && _length != 1)
+                        if (i == _length - 1 && number == "1" && _satang[0].ToString() != "0")
                         {
-                            _baht += "เอ็ด";
+                            MoneyText += "เอ็ด";
                         }
-                        else if (i == _length - 2 && _subnumber == "2" && _length != 2)
+                        else if (i == _length - 2 && number == "2" && _satang[0].ToString() != "0")
                         {
-                            _baht += "ยี่";
+                            MoneyText += "ยี่";
                         }
-                        else if (i != _length - 2 || _subnumber != "1")
+                        else if (i != _length - 2 || number != "1")
                         {
-                            _baht += TextPost[int.Parse(_subnumber)];
+                            MoneyText += _text[int.Parse(number)];
                         }
 
-                        _baht += TextPost[((_length - i) - 1)];
-
+                        MoneyText += _read[(_length - i) - 1];
                     }
-
                 }
 
+                MoneyText += "สตางค์";
             }
 
-            return _baht;
+            return MoneyText;
         }
     }
 }
